@@ -1,0 +1,4 @@
+# Claude Code ephemeral files
+.claude/plans/
+.claude/handoffs/
+.claude/settings.local.json
