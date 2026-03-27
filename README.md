@@ -131,6 +131,8 @@ specs.md               # Behavioral specification (source of truth)
 
 **Separate generation from evaluation**: Agents are bad at judging their own work. The evaluator agent is a distinct role with adversarial framing — it assumes failure until proven otherwise and never reads source code.
 
+**E2E proof-of-work**: Unit tests with mocks aren't enough — agents must verify their work against the real running application. For bugs, they reproduce first, then fix, then verify. For features, they exercise the feature end-to-end after implementation. The evidence is written into the issue file and audited by the evaluator, which will reject vague or missing proof.
+
 **Spec-driven**: `specs.md` is the source of truth for behavior. Agents read it before implementing. The evaluator tests against it. Ambiguities are flagged, not guessed at.
 
 **Context-aware**: Long sessions degrade. The context-manager creates periodic checkpoints so work can resume cleanly in a new session.

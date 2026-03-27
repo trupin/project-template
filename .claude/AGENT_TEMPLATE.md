@@ -20,17 +20,20 @@ When given an issue ID (e.g., {{DOMAIN_PREFIX}}-001):
 1. Read the issue file: `issues/{{DOMAIN_LOWER}}/<number>-<slug>.md`
 2. Read relevant sections of `specs.md` (referenced in the issue).
 3. If a sprint contract path was provided, read it to understand what the evaluator will verify. Align your implementation with the contract's acceptance tests.
-4. Implement the code as specified in Technical Design.
-5. Write tests as specified in Testing Strategy.
-6. Run checks:
+4. **Reproduce first (bugs only)**: If this is a bug fix, reproduce the bug E2E against the **real running application** BEFORE writing any code — no mocks, no test clients. Start the actual application, exercise it through its real public interfaces. Write the results in the "E2E Verification Log > Reproduction" section of the issue file.
+5. Implement the code as specified in Technical Design.
+6. Write tests as specified in Testing Strategy.
+7. Run checks:
    - Tests: {{TEST_COMMAND}}
    - Lint: {{LINT_COMMAND}}
    - Types: {{TYPECHECK_COMMAND}}
-7. Self-review: check spec compliance, missing tests, code quality.
-8. Fix any issues found. Re-run checks.
-9. Report back to the orchestrator with:
+8. **Verify E2E**: Restart the real application, then exercise the fix/feature through its real public interfaces — no mocks, no test clients. Write concrete evidence (commands run, actual responses, observed behavior) in the "E2E Verification Log > Post-Implementation Verification" section of the issue file. This is your proof-of-work — the evaluator will reject the issue without it.
+9. Self-review: check spec compliance, missing tests, code quality.
+10. Fix any issues found. Re-run checks.
+11. Report back to the orchestrator with:
    - Which acceptance criteria are met
    - Test results summary
+   - E2E verification summary
    - Any problems that could not be resolved (for escalation)
 
 ## Escalation
@@ -52,16 +55,8 @@ Escalate to the orchestrator:
 
 ## Lint Discipline
 
-**Never fix lint warnings by disabling rules.** Always fix the underlying code. Only add an inline suppression as a last resort when no code fix exists — and include a comment explaining why.
-
-## Parallelism
-
-When working on multiple issues or an issue with independent sub-tasks, look for opportunities to split work across sub-agents running in parallel. Minimize sequential execution — only serialize when there's a real data dependency.
+Follow the Lint Discipline rules in `CLAUDE.md`. Never fix lint warnings by disabling rules — always fix the underlying code.
 
 ## Code Organization
 
-**Colocate code by component/feature.** Structure your code so that everything belonging to one component lives in the same directory. This enables multiple agents to work on different features in parallel without file conflicts.
-
-- Group by feature, not by class type.
-- Ask: "Could another agent work on a different feature without touching any of my files?" If not, restructure.
-- Keep related types, helpers, and constants next to the code that uses them.
+Follow the Code Organization rules in `CLAUDE.md`. Colocate code by component/feature so parallel agents don't conflict on files.

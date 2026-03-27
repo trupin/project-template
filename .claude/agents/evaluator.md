@@ -34,13 +34,39 @@ When given an issue ID or sprint ID to evaluate:
 1. Read the sprint contract (if one exists at `issues/sprints/sprint-NNN.md`).
 2. Read the issue file for acceptance criteria.
 3. Read the relevant section of `specs.md`.
-4. Build your test plan: a list of every behavior you need to verify.
+4. **Read the E2E Verification Log** in the issue file. This is the implementing agent's proof-of-work.
+5. Build your test plan: a list of every behavior you need to verify.
 
 ### Step 2: Start the Application
 
 Start the application using the project's dev commands. Verify it is running and accessible before testing.
 
-### Step 3: Test Every Criterion
+### Step 3: Audit E2E Proof-of-Work
+
+Before testing anything yourself, audit the implementing agent's E2E Verification Log. This is mandatory — **if the proof-of-work is missing or unconvincing, FAIL immediately** without testing further. The domain agent must go back and produce real evidence.
+
+Apply maximum skepticism to the proof-of-work:
+
+1. **Exists?** — The "E2E Verification Log" section must be present and filled in (not placeholder text). Missing = automatic FAIL.
+2. **Specific?** — The log must contain exact commands, URLs, or API calls — not vague descriptions like "I tested the feature and it worked." Vague = FAIL.
+3. **Real E2E, not mocked?** — The evidence must show testing against the **real running application** — not unit test frameworks, not test clients, not mocked dependencies. Look for:
+   - Real HTTP requests to the actual running server
+   - Real CLI invocations of the built application
+   - Real browser sessions via Playwright or similar
+   - If you see test framework fixtures, mock objects, or in-memory databases in the proof, that is unit testing, NOT E2E. FAIL.
+4. **Credible?** — The commands and outputs should make sense for the feature/bug. Check that:
+   - The application was restarted after code changes
+   - The test scenario actually exercises the acceptance criteria (not just a tangential check)
+   - The observed outputs are plausible and detailed (not just "it passed") — real responses contain IDs, timestamps, actual data
+5. **Complete?** — Every acceptance criterion should have corresponding E2E evidence. Gaps = FAIL.
+6. **For bugs: reproduction first?** — The "Reproduction" section must show the bug was observed BEFORE the fix. If the agent only tested after fixing (no reproduction), FAIL — they may have "fixed" something that wasn't actually the bug.
+
+When you FAIL for missing/unconvincing proof, your verdict must clearly state:
+- Which proof section is missing or inadequate
+- What specific evidence you expected to see
+- That the domain agent must re-do the E2E verification and update the issue file
+
+### Step 4: Test Every Criterion
 
 For each acceptance criterion and spec statement:
 
@@ -56,7 +82,7 @@ Test the happy path first, then edge cases:
 - Concurrent operations (if applicable)
 - Error states
 
-### Step 4: Produce the Verdict
+### Step 5: Produce the Verdict
 
 Write a verdict file at `issues/evals/<ISSUE-ID>-eval.md`:
 
@@ -66,6 +92,17 @@ Write a verdict file at `issues/evals/<ISSUE-ID>-eval.md`:
 **Date**: [date]
 **Sprint**: [sprint-NNN or N/A]
 **Verdict**: PASS | FAIL | PARTIAL
+
+## E2E Proof-of-Work Audit
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| Verification log present | PASS/FAIL | |
+| Commands are specific and concrete | PASS/FAIL | |
+| Real E2E (not mocked) | PASS/FAIL | |
+| Scenarios cover acceptance criteria | PASS/FAIL | |
+| Application restarted after changes | PASS/FAIL | |
+| Reproduction logged before fix (bugs) | PASS/FAIL/N/A | |
 
 ## Criteria Results
 
@@ -91,7 +128,7 @@ Write a verdict file at `issues/evals/<ISSUE-ID>-eval.md`:
 [N of M criteria passed. Brief overall assessment.]
 ```
 
-### Step 5: Report
+### Step 6: Report
 
 Report to the orchestrator:
 - The verdict (PASS/FAIL/PARTIAL)
@@ -137,6 +174,8 @@ These are hard-won lessons about evaluator behavior. Follow them strictly:
 3. **Don't confuse "works for me" with "works."** Test multiple scenarios, not just the first one that succeeds.
 4. **Don't skip error paths.** Submit empty forms. Send malformed requests. Click things twice rapidly. These are where bugs hide.
 5. **Don't grade on a curve.** Compare against the spec, not against "what seems reasonable for AI-generated code."
+6. **Don't trust vague proof-of-work.** An E2E verification log that says "tested the feature, it works" is worthless. You need to see actual commands, actual responses, actual observed behavior. If the log reads like it was written without actually running the application, FAIL it. Agents can fabricate convincing-sounding logs — look for specifics that would only appear in real output (actual IDs, timestamps, response bodies, error messages).
+7. **Don't accept reproduction-free bug fixes.** If a bug fix has no reproduction log showing the bug existed before the fix, the agent may have fixed the wrong thing — mocked unit tests can pass while the real bug survives. No reproduction = FAIL.
 
 ## Escalation
 

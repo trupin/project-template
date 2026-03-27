@@ -66,8 +66,9 @@ If the ready issue is in `shared/` (e.g., SHARED-001):
 
 For each domain with ready issues:
 - Use the Agent tool to spawn the appropriate domain agent (defined in `.claude/agents/<domain>-dev.md`).
-- Pass the issue ID(s) and instruct it to read the issue file, implement, test, and report back.
+- Pass the issue ID(s) and instruct it to read the issue file, implement, test, verify E2E, and report back.
 - If a sprint contract was produced in step 3, include the contract file path so the domain agent knows what the evaluator will verify.
+- **E2E requirement**: Explicitly instruct agents to fill in the "E2E Verification Log" section of the issue file with concrete evidence. For bug fixes, they must reproduce the bug first. Remind them the evaluator will reject issues without credible proof-of-work.
 
 If multiple domains have ready issues, spawn all agents in parallel.
 
@@ -76,22 +77,23 @@ If multiple domains have ready issues, spawn all agents in parallel.
 When a domain agent reports completion:
 
 1. **Run checks**: `/test` and `/lint` to verify correctness. If checks fail, report failures to the domain agent for fixing. Loop until checks pass.
-2. **Evaluate** (if evaluator active): If `.claude/agents/evaluator.md` exists:
+2. **Check E2E proof-of-work** (skip if evaluator active — it handles this): Read the issue file and verify the "E2E Verification Log" section is filled in with concrete evidence (not placeholder text). For bugs, verify both "Reproduction" and "Post-Implementation Verification" are present. If missing, send the issue back to the domain agent.
+3. **Evaluate** (if evaluator active): If `.claude/agents/evaluator.md` exists:
    - Spawn the evaluator agent for this issue (or the sprint batch).
    - If FAIL: send the eval verdict file (`issues/evals/<ISSUE-ID>-eval.md`) to the domain agent for fixing. After fixes, re-run `/test` + `/lint`, then re-evaluate.
    - Loop up to 3 iterations. If still failing after 3 attempts, escalate to user with the eval file.
-   - If PASS: proceed to audit.
-3. **Decide whether to audit**: Run `/audit <ISSUE-ID>` only when:
+   - If PASS: proceed.
+4. **Decide whether to audit**: Run `/audit <ISSUE-ID>` only when:
    - The issue is P0 (critical path)
    - The issue touches shared contracts or cross-domain interfaces
    - The issue modifies more than ~5 files
    - The issue involves security-sensitive code (auth, input validation, crypto)
    - Skip `/audit` for small, single-file changes, documentation-only issues, and P2 tasks.
-4. If the audit surfaces FIX items, send them back to the domain agent. Loop until clean.
-5. **Commit the changes**:
+5. If the audit surfaces FIX items, send them back to the domain agent. Loop until clean.
+6. **Commit the changes**:
    - Stage only the files relevant to this issue (`git add <specific files>`).
    - Commit with format: `[ISSUE-ID] Short imperative description`
-6. Update the issue's Status to `done` in both the issue file and `issues/PLAN.md`.
+7. Update the issue's Status to `done` in both the issue file and `issues/PLAN.md`.
 
 ## 7. Checkpoint and report
 
@@ -104,10 +106,7 @@ When a domain agent reports completion:
 
 ## Rules
 
-- Never skip the dependency check.
 - Never modify another domain's code directly — spawn the appropriate agent.
 - Mark issues as `in_progress` before spawning agents, `done` only after verification.
 - If an agent cannot complete an issue, mark it as `blocked` with a reason.
 - Never commit code with a FAIL evaluator verdict without explicit user approval.
-- Respect the 3-iteration evaluator loop limit — escalate to user after that.
-- The evaluator agent must never receive source code files — only issue IDs and sprint contract paths.

@@ -113,14 +113,16 @@ This applies even when the user describes the work inline. Capture it as a struc
 
 Every issue follows this cycle, enforced by domain agents and the orchestrator:
 
-1. **Implement** — Write code per the issue's Technical Design and Acceptance Criteria. Read the sprint contract (if one exists in `issues/sprints/`) to understand what the evaluator will verify.
-2. **Test** — Run tests per the issue's Testing Strategy. Write new tests for new code.
-3. **Check** — Run linters and type checkers (`/lint`).
-4. **Audit** — Self-audit: check for spec compliance, missing tests, code quality issues.
-5. **Refactor** — Fix any issues found in review. Re-run tests to confirm no regressions.
-6. **Evaluate** *(if evaluator active)* — Orchestrator runs the evaluator agent against the running application. If FAIL, domain agent receives the eval verdict and fixes. Loop up to 3 times.
-7. **Surface** — If something cannot be resolved, escalate (see Escalation Protocol).
-8. **Report** — Mark issue as done and report to orchestrator.
+1. **Reproduce** *(bugs only)* — Before writing any code, reproduce the bug E2E against the real running application — no mocks, no test clients, no in-memory databases. Start the actual application, exercise it through its real public interfaces. Document exact commands and observed output in the issue's "E2E Verification Log > Reproduction" section. If the bug cannot be reproduced, investigate why before proceeding.
+2. **Implement** — Write code per the issue's Technical Design and Acceptance Criteria. Read the sprint contract (if one exists in `issues/sprints/`) to understand what the evaluator will verify.
+3. **Test** — Run tests per the issue's Testing Strategy. Write new tests for new code.
+4. **Check** — Run linters and type checkers (`/lint`).
+5. **Verify E2E** — Restart the real application, then exercise the fix/feature through its real public interfaces — no mocks, no test clients. Document exact commands and observed output in the issue's "E2E Verification Log > Post-Implementation Verification" section. This proof-of-work is mandatory — the evaluator will reject issues without credible evidence.
+6. **Self-review** — Check for spec compliance, missing tests, code quality issues.
+7. **Refactor** — Fix any issues found in self-review. Re-run tests to confirm no regressions.
+8. **Evaluate** *(if evaluator active)* — Orchestrator runs the evaluator agent. The evaluator checks that E2E proof-of-work is present and credible before testing behavior. If FAIL, domain agent receives the eval verdict and fixes. Loop up to 3 times.
+9. **Surface** — If something cannot be resolved, escalate (see Escalation Protocol).
+10. **Report** — Mark issue as done and report to orchestrator.
 
 ### Definition of Done
 
@@ -129,6 +131,8 @@ An issue is done when:
 - Tests pass with no regressions.
 - Type checks pass.
 - Lint passes.
+- E2E verification log is filled in with concrete evidence (commands, outputs, conclusions).
+- For bugs: reproduction log proves the bug existed before the fix.
 - Evaluator verdict is PASS (if evaluator is active).
 - Code follows project conventions.
 
